@@ -1,0 +1,774 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Caso de portfolio en Power BI sobre ventas, producto, clientes y rendimiento comercial con AdventureWorks.">
+  <meta name="theme-color" content="#f5efe4">
+  <title>Sales &amp; Product Performance · AdventureWorks</title>
+  <style>
+    :root {
+      --ink: #10282b;
+      --muted: #5c6b69;
+      --cream: #f5efe4;
+      --paper: #fffdf8;
+      --teal: #087a76;
+      --teal-dark: #075e5b;
+      --mint: #35c8b8;
+      --mint-soft: #d9f0eb;
+      --line: rgba(16, 40, 43, .15);
+      --shadow: 0 22px 60px rgba(26, 53, 52, .12);
+      --radius: 1.35rem;
+      --max: 1180px;
+    }
+
+    *, *::before, *::after { box-sizing: border-box; }
+    html { overflow-x: clip; scroll-behavior: smooth; }
+    body {
+      margin: 0;
+      overflow-x: clip;
+      color: var(--ink);
+      background:
+        radial-gradient(circle at 92% 3%, rgba(53, 200, 184, .12), transparent 25rem),
+        var(--cream);
+      font-family: Inter, Aptos, "Segoe UI", Arial, sans-serif;
+      line-height: 1.65;
+      text-rendering: optimizeLegibility;
+    }
+
+    body.modal-open { overflow: hidden; }
+    img { display: block; max-width: 100%; }
+    button, a { font: inherit; }
+    a { color: inherit; }
+    button { color: inherit; }
+
+    .skip-link {
+      position: fixed;
+      top: .5rem;
+      left: 50%;
+      z-index: 2000;
+      padding: .65rem 1rem;
+      transform: translate(-50%, -160%);
+      border-radius: 999px;
+      color: #fff;
+      background: var(--ink);
+    }
+    .skip-link:focus { transform: translate(-50%, 0); }
+
+    :focus-visible {
+      outline: 3px solid #f3a712;
+      outline-offset: 4px;
+    }
+
+    .back-link {
+      position: fixed;
+      top: 1.1rem;
+      left: 1.1rem;
+      z-index: 100;
+      display: inline-flex;
+      gap: .55rem;
+      align-items: center;
+      padding: .7rem 1rem;
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      text-decoration: none;
+      font-size: .84rem;
+      font-weight: 750;
+      letter-spacing: .01em;
+      background: rgba(255, 253, 248, .9);
+      box-shadow: 0 8px 26px rgba(16, 40, 43, .08);
+      backdrop-filter: blur(12px);
+      transition: transform .2s ease, border-color .2s ease, background .2s ease;
+    }
+    .back-link:hover { transform: translateY(-2px); border-color: var(--teal); background: #fff; }
+
+    .shell { width: min(calc(100% - 3rem), var(--max)); margin-inline: auto; }
+    .hero {
+      min-height: 86vh;
+      display: grid;
+      align-items: center;
+      padding: 8.5rem 0 5.5rem;
+      position: relative;
+      isolation: isolate;
+    }
+    .hero::after {
+      content: "";
+      position: absolute;
+      z-index: -1;
+      right: -16vw;
+      top: 9%;
+      width: min(48vw, 42rem);
+      aspect-ratio: 1;
+      border: clamp(4rem, 8vw, 7rem) solid rgba(53, 200, 184, .12);
+      border-radius: 50%;
+    }
+    .hero-copy { min-width: 0; max-width: 990px; }
+    .eyebrow, .section-index {
+      margin: 0 0 1.15rem;
+      color: var(--teal-dark);
+      font-size: .76rem;
+      font-weight: 850;
+      letter-spacing: .17em;
+      text-transform: uppercase;
+    }
+    .eyebrow::before, .section-index::before {
+      content: "";
+      display: inline-block;
+      width: .55rem;
+      height: .55rem;
+      margin-right: .65rem;
+      border-radius: 50%;
+      background: var(--mint);
+    }
+    h1, h2, h3, p { margin-top: 0; }
+    h1 {
+      max-width: 980px;
+      margin-bottom: 1.45rem;
+      font-size: clamp(3.4rem, 7.7vw, 7rem);
+      line-height: .9;
+      letter-spacing: -.07em;
+      text-wrap: balance;
+    }
+    h1 span { display: block; color: var(--teal); }
+    .hero-lede {
+      max-width: 780px;
+      margin-bottom: 2rem;
+      color: #485c5c;
+      font-size: clamp(1.05rem, 1.8vw, 1.35rem);
+      line-height: 1.55;
+    }
+    .tags, .tech-list {
+      display: flex;
+      flex-wrap: wrap;
+      gap: .55rem;
+      margin: 0;
+      padding: 0;
+      list-style: none;
+    }
+    .tags li, .tech-list li {
+      padding: .42rem .78rem;
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      font-size: .78rem;
+      font-weight: 750;
+      background: rgba(255, 253, 248, .6);
+    }
+
+    .showcase { padding-bottom: 3.8rem; }
+    .image-frame {
+      margin: 0;
+      padding: .65rem;
+      border: 1px solid var(--line);
+      border-radius: calc(var(--radius) + .2rem);
+      background: var(--paper);
+      box-shadow: var(--shadow);
+    }
+    .image-button {
+      position: relative;
+      width: 100%;
+      overflow: hidden;
+      padding: 0;
+      border: 0;
+      border-radius: .95rem;
+      cursor: zoom-in;
+      background: var(--mint-soft);
+    }
+    .image-button img { width: 100%; height: auto; transition: transform .35s ease; }
+    .image-button:hover img { transform: scale(1.012); }
+    .zoom-hint {
+      position: absolute;
+      right: .9rem;
+      bottom: .9rem;
+      display: inline-flex;
+      gap: .4rem;
+      align-items: center;
+      padding: .48rem .72rem;
+      border-radius: 999px;
+      color: #fff;
+      background: rgba(16, 40, 43, .88);
+      font-size: .72rem;
+      font-weight: 750;
+      backdrop-filter: blur(8px);
+    }
+    figcaption {
+      display: flex;
+      justify-content: space-between;
+      gap: 1rem;
+      padding: .85rem .45rem .2rem;
+      color: var(--muted);
+      font-size: .82rem;
+    }
+    figcaption strong { color: var(--ink); }
+
+    .kpi-wrap { padding-bottom: 8rem; }
+    .kpi-intro {
+      display: flex;
+      justify-content: space-between;
+      align-items: end;
+      gap: 2rem;
+      margin-bottom: 1.4rem;
+    }
+    .kpi-intro p { max-width: 570px; margin-bottom: 0; color: var(--muted); }
+    .kpis { display: grid; grid-template-columns: repeat(4, 1fr); gap: .8rem; }
+    .kpi {
+      min-height: 155px;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      padding: 1.25rem;
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background: rgba(255, 253, 248, .72);
+    }
+    .kpi span { color: var(--muted); font-size: .76rem; font-weight: 800; letter-spacing: .1em; text-transform: uppercase; }
+    .kpi strong { font-size: clamp(2rem, 4vw, 3.4rem); line-height: 1; letter-spacing: -.06em; }
+    .kpi:first-child { color: #fff; background: var(--teal); border-color: var(--teal); }
+    .kpi:first-child span { color: rgba(255,255,255,.72); }
+
+    .section { padding: 7rem 0; border-top: 1px solid var(--line); }
+    .section-head { max-width: 760px; margin-bottom: 3rem; }
+    .section h2 {
+      margin-bottom: 1.1rem;
+      font-size: clamp(2.35rem, 5vw, 4.75rem);
+      line-height: 1;
+      letter-spacing: -.055em;
+      text-wrap: balance;
+    }
+    .section-lede { color: var(--muted); font-size: 1.08rem; }
+    .question {
+      max-width: 960px;
+      margin: 0 0 3rem;
+      padding-left: 1.5rem;
+      border-left: .3rem solid var(--mint);
+      font-size: clamp(1.5rem, 3.2vw, 2.65rem);
+      font-weight: 650;
+      line-height: 1.35;
+      letter-spacing: -.025em;
+    }
+    .question-grid, .feature-list, .insight-grid, .capability-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: .75rem;
+      margin: 0;
+      padding: 0;
+      list-style: none;
+    }
+    .question-grid li, .feature-list li {
+      padding: 1rem 1.1rem;
+      border-bottom: 1px solid var(--line);
+      color: #344c4d;
+    }
+    .question-grid li::before, .feature-list li::before { content: "↗"; margin-right: .65rem; color: var(--teal); font-weight: 900; }
+
+    .split { display: grid; grid-template-columns: .78fr 1.22fr; gap: clamp(2rem, 6vw, 6rem); align-items: center; }
+    .split.reverse { grid-template-columns: 1.22fr .78fr; }
+    .split.reverse .copy { order: 2; }
+    .split.reverse .image-frame { order: 1; }
+    .copy h2 { font-size: clamp(2.1rem, 4.3vw, 4rem); }
+    .copy p:not(.section-index) { color: var(--muted); }
+    .copy .feature-list { grid-template-columns: 1fr; margin-top: 1.35rem; }
+    .copy .feature-list li { padding-inline: 0; }
+
+    .analysis-pair { display: grid; grid-template-columns: repeat(2, 1fr); gap: 1.2rem; }
+    .analysis-card {
+      display: flex;
+      flex-direction: column;
+      padding: 1.2rem;
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background: rgba(255, 253, 248, .72);
+    }
+    .analysis-card .image-frame { padding: .35rem; box-shadow: none; }
+    .analysis-card h3 { margin: 1.35rem 0 .55rem; font-size: 1.5rem; letter-spacing: -.025em; }
+    .analysis-card p { color: var(--muted); }
+    .path { display: flex; flex-wrap: wrap; align-items: center; gap: .5rem; margin-top: auto; font-size: .82rem; font-weight: 800; }
+    .path span { padding: .38rem .58rem; border-radius: .45rem; background: var(--mint-soft); }
+
+    .model-flow {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      margin: 2.5rem 0;
+      padding: 0;
+      list-style: none;
+      counter-reset: flow;
+    }
+    .model-flow li { position: relative; padding: 1rem 1.4rem 1rem 0; border-top: 2px solid var(--mint); counter-increment: flow; font-weight: 800; }
+    .model-flow li::before { content: "0" counter(flow); display: block; margin-bottom: .45rem; color: var(--teal); font-size: .72rem; letter-spacing: .12em; }
+    .model-flow li:not(:last-child)::after { content: "→"; position: absolute; top: .9rem; right: .35rem; color: var(--teal); }
+    .model-groups { display: grid; grid-template-columns: repeat(3, 1fr); gap: .8rem; margin-top: 1.5rem; }
+    .model-group { padding: 1.2rem; border: 1px solid var(--line); border-radius: 1rem; background: var(--paper); }
+    .model-group h3 { font-size: .78rem; letter-spacing: .12em; text-transform: uppercase; }
+    .model-group p { margin: 0; color: var(--muted); font-size: .92rem; }
+
+    .dax-grid { display: grid; gap: 1rem; }
+    .code-card {
+      display: grid;
+      grid-template-columns: .72fr 1.28fr;
+      overflow: hidden;
+      border: 1px solid rgba(255,255,255,.12);
+      border-radius: var(--radius);
+      color: #eefaf7;
+      background: #102f31;
+    }
+    .code-copy { padding: 1.6rem; border-right: 1px solid rgba(255,255,255,.12); }
+    .code-copy span { color: #75e4d7; font-size: .72rem; font-weight: 850; letter-spacing: .13em; text-transform: uppercase; }
+    .code-copy h3 { margin: .55rem 0; font-size: 1.45rem; }
+    .code-copy p { margin: 0; color: #b8ceca; font-size: .9rem; }
+    pre { margin: 0; overflow-x: auto; padding: 1.6rem; background: rgba(0,0,0,.12); }
+    code { font: 500 .85rem/1.65 "Cascadia Code", Consolas, monospace; white-space: pre; }
+
+    .insight-grid { grid-template-columns: repeat(5, 1fr); counter-reset: insight; }
+    .insight-grid article {
+      min-height: 250px;
+      padding: 1.3rem;
+      border-top: 3px solid var(--mint);
+      background: rgba(255,253,248,.6);
+      counter-increment: insight;
+    }
+    .insight-grid article::before { content: "0" counter(insight); color: var(--teal); font-size: .75rem; font-weight: 850; }
+    .insight-grid p { margin-top: 2.3rem; font-size: .95rem; }
+
+    .capability-grid { grid-template-columns: repeat(3, 1fr); }
+    .capability-grid article { padding: 1.4rem; border: 1px solid var(--line); border-radius: 1rem; background: var(--paper); }
+    .capability-grid h3 { margin-bottom: .5rem; font-size: 1.05rem; }
+    .capability-grid p { margin: 0; color: var(--muted); font-size: .9rem; }
+
+    .scope-card {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 2rem;
+      padding: clamp(1.5rem, 5vw, 3.5rem);
+      border-radius: calc(var(--radius) * 1.3);
+      color: #fff;
+      background: var(--teal);
+    }
+    .scope-card h2 { margin-bottom: 0; color: #fff; }
+    .scope-card p { color: rgba(255,255,255,.82); }
+    .scope-card .tech-list li { border-color: rgba(255,255,255,.25); background: rgba(255,255,255,.08); }
+    .portfolio-note { margin: 1.3rem 0 0; padding-top: 1.3rem; border-top: 1px solid rgba(255,255,255,.25); font-size: .9rem; }
+
+    .closing { padding: 8rem 0 9rem; text-align: center; }
+    .closing p { color: var(--muted); }
+    .closing-link {
+      display: inline-flex;
+      align-items: center;
+      gap: .7rem;
+      margin-top: 1rem;
+      padding: .9rem 1.25rem;
+      border-radius: 999px;
+      color: #fff;
+      background: var(--ink);
+      text-decoration: none;
+      font-weight: 800;
+    }
+
+    .lightbox[hidden] { display: none; }
+    .lightbox {
+      position: fixed;
+      inset: 0;
+      z-index: 1000;
+      display: grid;
+      place-items: center;
+      padding: clamp(.65rem, 3vw, 2rem);
+      background: rgba(4, 17, 18, .92);
+      backdrop-filter: blur(12px);
+    }
+    .lightbox-panel { width: min(96vw, 1500px); max-height: 94vh; display: flex; flex-direction: column; align-items: center; }
+    .lightbox-image { max-width: 100%; max-height: calc(94vh - 7rem); object-fit: contain; box-shadow: 0 20px 80px rgba(0,0,0,.45); }
+    .lightbox-toolbar { width: 100%; display: grid; grid-template-columns: auto 1fr auto auto; gap: .6rem; align-items: center; padding-top: .75rem; color: #fff; }
+    .lightbox-caption { margin: 0; padding-inline: .5rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: .85rem; }
+    .lightbox button {
+      min-width: 2.65rem;
+      min-height: 2.65rem;
+      border: 1px solid rgba(255,255,255,.35);
+      border-radius: 999px;
+      color: #fff;
+      cursor: pointer;
+      background: rgba(255,255,255,.1);
+    }
+    .lightbox button:hover { background: rgba(255,255,255,.2); }
+    .lightbox-close { font-size: 1.3rem; }
+
+    @media (max-width: 900px) {
+      .hero { min-height: auto; padding-top: 9rem; }
+      .kpis, .model-groups { grid-template-columns: repeat(2, 1fr); }
+      .split, .split.reverse { grid-template-columns: 1fr; }
+      .split.reverse .copy, .split.reverse .image-frame { order: initial; }
+      .analysis-pair { grid-template-columns: 1fr; }
+      .model-flow { grid-template-columns: repeat(2, 1fr); }
+      .code-card { grid-template-columns: 1fr; }
+      .code-copy { border-right: 0; border-bottom: 1px solid rgba(255,255,255,.12); }
+      .insight-grid { grid-template-columns: repeat(2, 1fr); }
+      .capability-grid { grid-template-columns: repeat(2, 1fr); }
+      .scope-card { grid-template-columns: 1fr; }
+    }
+
+    @media (max-width: 560px) {
+      .shell { width: min(calc(100% - 1.5rem), var(--max)); }
+      .back-link { top: .7rem; left: .7rem; padding: .62rem .78rem; font-size: .76rem; }
+      .hero { padding: 7rem 0 4.5rem; }
+      .hero::after { width: 24rem; right: -15rem; }
+      h1 { font-size: clamp(2.65rem, 12vw, 3.3rem); }
+      .eyebrow, .section-index { font-size: .68rem; letter-spacing: .12em; }
+      .showcase { padding-bottom: 2.6rem; }
+      .image-frame { padding: .35rem; border-radius: 1rem; }
+      .image-button { border-radius: .75rem; }
+      .zoom-hint { right: .5rem; bottom: .5rem; padding: .35rem .55rem; }
+      figcaption { display: block; padding-inline: .25rem; }
+      figcaption span { display: block; margin-top: .2rem; }
+      .kpi-wrap { padding-bottom: 5rem; }
+      .kpi-intro { display: block; }
+      .kpis { grid-template-columns: repeat(2, 1fr); }
+      .kpi { min-height: 120px; padding: 1rem; }
+      .section { padding: 5rem 0; }
+      .question-grid, .feature-list, .model-groups, .capability-grid { grid-template-columns: 1fr; }
+      .analysis-card { padding: .7rem; }
+      .model-flow { display: block; }
+      .model-flow li { padding-left: 0; }
+      .model-flow li:not(:last-child)::after { content: "↓"; right: .25rem; }
+      .insight-grid { grid-template-columns: 1fr; }
+      .insight-grid article { min-height: 175px; }
+      .insight-grid p { margin-top: 1.3rem; }
+      .scope-card { padding: 1.4rem; }
+      pre { padding: 1.15rem; }
+      code { font-size: .76rem; }
+      .lightbox-toolbar { grid-template-columns: auto 1fr auto auto; }
+      .lightbox-caption { font-size: .72rem; }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      html { scroll-behavior: auto; }
+      *, *::before, *::after { animation-duration: .01ms !important; animation-iteration-count: 1 !important; transition-duration: .01ms !important; }
+    }
+  </style>
+</head>
+<body>
+  <a class="skip-link" href="#contenido">Saltar al contenido</a>
+  <a class="back-link" href="https://anaguedan.github.io/" aria-label="Volver al portfolio de Ana Guedán">← Volver al portfolio</a>
+
+  <main id="contenido">
+    <header class="hero shell">
+      <div class="hero-copy">
+        <p class="eyebrow">Proyecto 03 · Power BI · AdventureWorks</p>
+        <h1>Sales &amp; Product Performance <span>AdventureWorks</span></h1>
+        <p class="hero-lede">Dashboard de Business Intelligence para analizar el rendimiento comercial de AdventureWorks desde ingresos, beneficio, pedidos y devoluciones hasta producto, cliente y geografía.</p>
+        <ul class="tags" aria-label="Tecnologías principales">
+          <li>Power BI</li><li>DAX</li><li>Data Modelling</li><li>Sales Analytics</li><li>Product Analytics</li><li>Business Intelligence</li>
+        </ul>
+      </div>
+    </header>
+
+    <section class="showcase shell" aria-labelledby="dashboard-principal">
+      <figure class="image-frame">
+        <button class="image-button" type="button" data-lightbox data-caption="Dashboard ejecutivo · Sales &amp; Product Performance" aria-label="Ampliar dashboard ejecutivo de AdventureWorks">
+          <img src="assets/images/dashboard-overview.png" alt="Dashboard ejecutivo de AdventureWorks con KPIs de revenue, profit, orders y return rate, tendencia temporal, categorías y productos" width="1327" height="737">
+          <span class="zoom-hint" aria-hidden="true">⊕ Ampliar</span>
+        </button>
+        <figcaption><strong id="dashboard-principal">Vista ejecutiva del rendimiento comercial</strong><span>Power BI · Periodo visible 2020–2022</span></figcaption>
+      </figure>
+    </section>
+
+    <section class="kpi-wrap shell" aria-labelledby="resumen-title">
+      <div class="kpi-intro">
+        <div><p class="section-index">Resumen ejecutivo</p><h2 id="resumen-title">La actividad, en cuatro señales</h2></div>
+        <p>Valores redondeados tal como aparecen en la captura principal; se presentan como magnitudes aproximadas.</p>
+      </div>
+      <div class="kpis" aria-label="Indicadores principales">
+        <article class="kpi"><span>Revenue</span><strong>≈ $25M</strong></article>
+        <article class="kpi"><span>Profit</span><strong>≈ $10M</strong></article>
+        <article class="kpi"><span>Orders</span><strong>≈ 25K</strong></article>
+        <article class="kpi"><span>Return rate</span><strong>≈ 2%</strong></article>
+      </div>
+    </section>
+
+    <section class="section" id="pregunta" aria-labelledby="pregunta-title">
+      <div class="shell">
+        <div class="section-head">
+          <p class="section-index">01 · Pregunta de negocio</p>
+          <h2 id="pregunta-title">De la visión global a la decisión concreta</h2>
+        </div>
+        <p class="question">¿Cómo se comportan las ventas y qué dimensiones ayudan a explicar la composición del rendimiento comercial?</p>
+        <ul class="question-grid">
+          <li>¿Cómo evoluciona el revenue?</li><li>¿Qué categorías concentran más pedidos?</li>
+          <li>¿Qué productos destacan por pedidos, revenue o devoluciones?</li><li>¿Dónde se concentra geográficamente la actividad?</li>
+          <li>¿Qué perfiles de clientes generan mayor valor?</li><li>¿Cómo se compara el rendimiento mensual con objetivos?</li>
+          <li>¿Cómo podría cambiar el beneficio ante ajustes de precio?</li>
+        </ul>
+      </div>
+    </section>
+
+    <section class="section" id="ejecutivo" aria-labelledby="ejecutivo-title">
+      <div class="shell split">
+        <div class="copy">
+          <p class="section-index">02 · Dashboard ejecutivo</p>
+          <h2 id="ejecutivo-title">Una lectura compacta del negocio</h2>
+          <p>La portada reúne los indicadores esenciales con la evolución temporal y el detalle de categorías y productos. Así, volumen, valor y devoluciones pueden leerse en una misma vista antes de profundizar.</p>
+        </div>
+        <ul class="feature-list" aria-label="Contenido del dashboard ejecutivo">
+          <li>KPIs de ingresos, beneficio, pedidos y tasa de devolución.</li>
+          <li>Tendencia del revenue y seguimiento mensual.</li>
+          <li>Distribución de pedidos por categoría.</li>
+          <li>Top Products con volumen, revenue y return rate.</li>
+        </ul>
+      </div>
+    </section>
+
+    <section class="section" id="producto" aria-labelledby="producto-title">
+      <div class="shell split reverse">
+        <div class="copy">
+          <p class="section-index">03 · Producto y escenarios what-if</p>
+          <h2 id="producto-title">Explorar sensibilidad, no predecir el futuro</h2>
+          <p>La página de producto permite seleccionar una referencia, contrastar pedidos, revenue y profit con sus objetivos y modificar un parámetro de precio para observar un escenario simulado de beneficio ajustado.</p>
+          <ul class="feature-list"><li>Selección de producto y métrica.</li><li>Comparación mensual frente a objetivos.</li><li>Simulación de ajuste de precio.</li></ul>
+        </div>
+        <figure class="image-frame">
+          <button class="image-button" type="button" data-lightbox data-caption="Detalle de producto y escenario what-if" aria-label="Ampliar análisis de producto y escenario what-if">
+            <img src="assets/images/product-what-if.png" alt="Página de Power BI con producto seleccionado, indicadores frente a objetivo y escenario de ajuste de precio" width="1332" height="748" loading="lazy">
+            <span class="zoom-hint" aria-hidden="true">⊕ Ampliar</span>
+          </button>
+          <figcaption><strong>Producto · What-if</strong><span>Escenario interactivo</span></figcaption>
+        </figure>
+      </div>
+    </section>
+
+    <section class="section" id="clientes" aria-labelledby="clientes-title">
+      <div class="shell split">
+        <div class="copy">
+          <p class="section-index">04 · Análisis de clientes</p>
+          <h2 id="clientes-title">Quién genera valor y cómo se distribuye</h2>
+          <p>La dimensión cliente incorpora clientes únicos, revenue por cliente, comportamiento por nivel de ingresos y ocupación, además de un ranking para explorar la contribución comercial.</p>
+        </div>
+        <figure class="image-frame">
+          <button class="image-button" type="button" data-lightbox data-caption="Análisis de clientes" aria-label="Ampliar dashboard de análisis de clientes">
+            <img src="assets/images/customer-analysis.png" alt="Dashboard de clientes con KPIs, distribución por ingresos y ocupación, ranking y cliente principal por revenue" width="1333" height="746" loading="lazy">
+            <span class="zoom-hint" aria-hidden="true">⊕ Ampliar</span>
+          </button>
+          <figcaption><strong>Customer analysis</strong><span>Segmentación y ranking</span></figcaption>
+        </figure>
+      </div>
+    </section>
+
+    <section class="section" id="geografia" aria-labelledby="geografia-title">
+      <div class="shell split reverse">
+        <div class="copy">
+          <p class="section-index">05 · Análisis geográfico</p>
+          <h2 id="geografia-title">La actividad sobre el territorio</h2>
+          <p>La vista geográfica sitúa la actividad comercial por país y permite enfocar regiones como North America, Europe y Pacific. El mapa aporta contexto territorial sin forzar conclusiones sobre magnitudes regionales no visibles.</p>
+        </div>
+        <figure class="image-frame">
+          <button class="image-button" type="button" data-lightbox data-caption="Distribución geográfica de la actividad" aria-label="Ampliar mapa del análisis geográfico">
+            <img src="assets/images/geographic-analysis.png" alt="Mapa mundial oscuro con actividad en Estados Unidos, Canadá, Reino Unido, Francia, Alemania y Australia" width="1317" height="735" loading="lazy">
+            <span class="zoom-hint" aria-hidden="true">⊕ Ampliar</span>
+          </button>
+          <figcaption><strong>Geographic analysis</strong><span>North America · Europe · Pacific</span></figcaption>
+        </figure>
+      </div>
+    </section>
+
+    <section class="section" id="exploracion" aria-labelledby="exploracion-title">
+      <div class="shell">
+        <div class="section-head">
+          <p class="section-index">06–07 · Exploración analítica avanzada</p>
+          <h2 id="exploracion-title">Descomponer métricas y detectar patrones</h2>
+          <p class="section-lede">Dos visuales de Power BI amplían la lectura descriptiva: uno recorre la composición de los pedidos y otro explora factores asociados, sin convertir relaciones observadas en causalidad.</p>
+        </div>
+        <div class="analysis-pair">
+          <article class="analysis-card">
+            <figure class="image-frame">
+              <button class="image-button" type="button" data-lightbox data-caption="Decomposition Tree · Total Orders" aria-label="Ampliar árbol de descomposición de pedidos">
+                <img src="assets/images/decomposition-tree.png" alt="Árbol de descomposición de Total Orders por categoría, subcategoría y producto" width="1116" height="640" loading="lazy">
+                <span class="zoom-hint" aria-hidden="true">⊕ Ampliar</span>
+              </button>
+            </figure>
+            <h3>06 · Decomposition Tree</h3>
+            <p>Permite hacer drill-down y entender cómo se compone una métrica a través de sucesivos niveles de detalle.</p>
+            <div class="path" aria-label="Ruta de descomposición"><span>Total Orders</span>→<span>Category</span>→<span>Subcategory</span>→<span>Product</span></div>
+          </article>
+          <article class="analysis-card">
+            <figure class="image-frame">
+              <button class="image-button" type="button" data-lightbox data-caption="Key Influencers · exploración de factores asociados" aria-label="Ampliar análisis de elementos influyentes clave">
+                <img src="assets/images/key-influencers.png" alt="Visuales Key Influencers de Power BI que exploran variables relacionadas con HomeOwner y Average Retail Price" width="1127" height="586" loading="lazy">
+                <span class="zoom-hint" aria-hidden="true">⊕ Ampliar</span>
+              </button>
+            </figure>
+            <h3>07 · Key Influencers</h3>
+            <p>Ayuda a explorar factores asociados, variables relacionadas, drivers potenciales y patrones observados en determinadas métricas o características.</p>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <section class="section" id="modelo" aria-labelledby="modelo-title">
+      <div class="shell">
+        <div class="section-head">
+          <p class="section-index">08 · Modelo de datos</p>
+          <h2 id="modelo-title">Una arquitectura que sostiene el análisis</h2>
+          <p class="section-lede">El modelo separa datos transaccionales, dimensiones de análisis y tablas auxiliares. Esa organización conecta la lógica de negocio con medidas reutilizables y visuales consistentes.</p>
+        </div>
+        <ol class="model-flow" aria-label="Flujo del modelo a la decisión"><li>Datos transaccionales</li><li>Dimensiones</li><li>Medidas y visuales</li><li>Decisiones</li></ol>
+        <figure class="image-frame">
+          <button class="image-button" type="button" data-lightbox data-caption="Vista del modelo de datos en Power BI" aria-label="Ampliar vista del modelo de datos">
+            <img src="assets/images/data-model.png" alt="Vista Modelo de Power BI con tablas Sales Data, Returns Data, dimensiones de calendario, cliente, territorio y producto, y tablas auxiliares" width="1756" height="817" loading="lazy">
+            <span class="zoom-hint" aria-hidden="true">⊕ Ampliar</span>
+          </button>
+          <figcaption><strong>Data model</strong><span>Arquitectura técnica documentada</span></figcaption>
+        </figure>
+        <div class="model-groups">
+          <article class="model-group"><h3>Tablas de hechos</h3><p>Sales Data · Returns Data</p></article>
+          <article class="model-group"><h3>Dimensiones / Lookups</h3><p>Calendar · Customer · Territory · Product · Category · Subcategory</p></article>
+          <article class="model-group"><h3>Tablas auxiliares</h3><p>Price Adjustment · Selectores de métricas · Measure Table · Rolling Calendar</p></article>
+        </div>
+      </div>
+    </section>
+
+    <section class="section" id="dax" aria-labelledby="dax-title">
+      <div class="shell">
+        <div class="section-head">
+          <p class="section-index">09 · DAX</p>
+          <h2 id="dax-title">Medidas que traducen reglas de negocio</h2>
+          <p class="section-lede">Tres ejemplos documentan inteligencia temporal, filtrado de negocio y modificación del contexto de filtro.</p>
+        </div>
+        <div class="dax-grid">
+          <article class="code-card"><div class="code-copy"><span>Inteligencia temporal</span><h3>Previous Month Orders</h3><p>Compara el contexto actual con el mes anterior mediante DATEADD.</p></div><pre><code>Previous Month Orders =
+CALCULATE(
+    [Total Orders],
+    DATEADD(
+        'Calendar Lookup'[Date],
+        -1,
+        MONTH
+    )
+)</code></pre></article>
+          <article class="code-card"><div class="code-copy"><span>Filtro condicionado</span><h3>High Ticket Orders</h3><p>Limita el cálculo a productos cuyo precio supera el precio medio general.</p></div><pre><code>High Ticket Orders =
+CALCULATE(
+    [Total Orders],
+    FILTER(
+        'Product Lookup',
+        'Product Lookup'[ProductPrice] &gt; [Overall Average Price]
+    )
+)</code></pre></article>
+          <article class="code-card"><div class="code-copy"><span>Filtrado de negocio</span><h3>Bike Sales</h3><p>Modifica el contexto para calcular únicamente la categoría Bikes.</p></div><pre><code>Bike Sales =
+CALCULATE(
+    [Quantity Sold],
+    'Product Categories Lookup'[CategoryName] = "Bikes"
+)</code></pre></article>
+        </div>
+      </div>
+    </section>
+
+    <section class="section" id="insights" aria-labelledby="insights-title">
+      <div class="shell">
+        <div class="section-head"><p class="section-index">10 · Principales insights</p><h2 id="insights-title">Lo que permiten ver las evidencias</h2></div>
+        <div class="insight-grid">
+          <article><p>Accessories aparece como la categoría con mayor número de pedidos en la vista principal.</p></article>
+          <article><p>El revenue muestra una tendencia general creciente durante el periodo visible.</p></article>
+          <article><p>Producto permite contrastar volumen de pedidos y tasa de devolución.</p></article>
+          <article><p>Cliente permite explorar la concentración de revenue en clientes y segmentos.</p></article>
+          <article><p>El escenario what-if permite explorar la sensibilidad del beneficio a variaciones de precio.</p></article>
+        </div>
+      </div>
+    </section>
+
+    <section class="section" id="competencias" aria-labelledby="competencias-title">
+      <div class="shell">
+        <div class="section-head"><p class="section-index">11 · Qué demuestra el proyecto</p><h2 id="competencias-title">Del modelo a una conversación de negocio</h2><p class="section-lede">Un caso orientado a mostrar capacidades de Business Intelligence de forma verificable y sin atribuir al dataset decisiones empresariales reales.</p></div>
+        <div class="capability-grid">
+          <article><h3>Diseño ejecutivo</h3><p>Jerarquía visual, KPIs y una navegación que avanza del resumen al detalle.</p></article>
+          <article><h3>Modelado de datos</h3><p>Organización de hechos, dimensiones, relaciones y tablas auxiliares.</p></article>
+          <article><h3>DAX y time intelligence</h3><p>Medidas para filtros de negocio, contexto y comparación temporal.</p></article>
+          <article><h3>Análisis multidimensional</h3><p>Lecturas de producto, cliente, geografía, pedidos y devoluciones.</p></article>
+          <article><h3>What-if analysis</h3><p>Simulación controlada para explorar escenarios de precio y beneficio.</p></article>
+          <article><h3>Visuales avanzados</h3><p>Decomposition Tree y Key Influencers para ampliar la exploración.</p></article>
+        </div>
+      </div>
+    </section>
+
+    <section class="section" id="alcance" aria-labelledby="alcance-title">
+      <div class="shell scope-card">
+        <div><p class="section-index">12 · Tecnologías y alcance</p><h2 id="alcance-title">Business Intelligence con evidencia visible</h2></div>
+        <div>
+          <p>El caso se apoya principalmente en Power BI, modelado, DAX, relaciones, análisis interactivo y visualización. Power Query forma parte del stack tecnológico, aunque no se presenta como evidencia documentada al no disponer de una captura de Transform Data.</p>
+          <ul class="tech-list"><li>Power BI</li><li>DAX</li><li>Data Modelling</li><li>Power Query</li><li>Business Intelligence</li><li>Sales Analytics</li></ul>
+          <p class="portfolio-note">Proyecto de portfolio desarrollado con el dataset AdventureWorks para demostrar modelado de datos, análisis comercial y desarrollo de soluciones de Business Intelligence en Power BI.</p>
+        </div>
+      </div>
+    </section>
+
+    <footer class="closing shell">
+      <p class="eyebrow">Fin del case study</p>
+      <h2>Volver a la visión completa</h2>
+      <p>Explora el resto de proyectos y la trayectoria profesional de Ana Guedán.</p>
+      <a class="closing-link" href="https://anaguedan.github.io/">← Volver al portfolio</a>
+    </footer>
+  </main>
+
+  <div class="lightbox" id="lightbox" role="dialog" aria-modal="true" aria-labelledby="lightbox-caption" hidden>
+    <div class="lightbox-panel">
+      <img class="lightbox-image" id="lightbox-image" src="" alt="">
+      <div class="lightbox-toolbar">
+        <button type="button" id="lightbox-prev" aria-label="Imagen anterior">←</button>
+        <p class="lightbox-caption" id="lightbox-caption"></p>
+        <button type="button" id="lightbox-next" aria-label="Imagen siguiente">→</button>
+        <button class="lightbox-close" type="button" id="lightbox-close" aria-label="Cerrar imagen ampliada">×</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    (() => {
+      const triggers = [...document.querySelectorAll('[data-lightbox]')];
+      const lightbox = document.getElementById('lightbox');
+      const modalImage = document.getElementById('lightbox-image');
+      const caption = document.getElementById('lightbox-caption');
+      const closeButton = document.getElementById('lightbox-close');
+      const prevButton = document.getElementById('lightbox-prev');
+      const nextButton = document.getElementById('lightbox-next');
+      let currentIndex = 0;
+      let lastTrigger = null;
+
+      const showImage = (index) => {
+        currentIndex = (index + triggers.length) % triggers.length;
+        const trigger = triggers[currentIndex];
+        const image = trigger.querySelector('img');
+        modalImage.src = image.src;
+        modalImage.alt = image.alt;
+        caption.textContent = trigger.dataset.caption;
+      };
+
+      const openLightbox = (index) => {
+        lastTrigger = document.activeElement;
+        showImage(index);
+        lightbox.hidden = false;
+        document.body.classList.add('modal-open');
+        closeButton.focus();
+      };
+
+      const closeLightbox = () => {
+        lightbox.hidden = true;
+        modalImage.src = '';
+        document.body.classList.remove('modal-open');
+        if (lastTrigger) lastTrigger.focus();
+      };
+
+      triggers.forEach((trigger, index) => trigger.addEventListener('click', () => openLightbox(index)));
+      closeButton.addEventListener('click', closeLightbox);
+      prevButton.addEventListener('click', () => showImage(currentIndex - 1));
+      nextButton.addEventListener('click', () => showImage(currentIndex + 1));
+      lightbox.addEventListener('click', (event) => { if (event.target === lightbox) closeLightbox(); });
+
+      document.addEventListener('keydown', (event) => {
+        if (lightbox.hidden) return;
+        if (event.key === 'Escape') closeLightbox();
+        if (event.key === 'ArrowLeft') showImage(currentIndex - 1);
+        if (event.key === 'ArrowRight') showImage(currentIndex + 1);
+        if (event.key === 'Tab') {
+          const controls = [prevButton, nextButton, closeButton];
+          const first = controls[0];
+          const last = controls[controls.length - 1];
+          if (event.shiftKey && document.activeElement === first) { event.preventDefault(); last.focus(); }
+          else if (!event.shiftKey && document.activeElement === last) { event.preventDefault(); first.focus(); }
+        }
+      });
+    })();
+  </script>
+</body>
+</html>
